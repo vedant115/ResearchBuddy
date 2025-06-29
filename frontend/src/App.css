@@ -143,6 +143,33 @@ body {
   font-size: 1.1rem;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-pdf-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.save-pdf-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.save-pdf-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
 .clear-button {
   background-color: #dc3545;
   color: white;

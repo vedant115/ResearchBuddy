@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import jsPDF from "jspdf";
 import "./App.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -115,6 +116,149 @@ function App() {
     setResponses([]);
   };
 
+  const exportToPDF = async () => {
+    if (responses.length === 0) {
+      alert("No responses to export");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - 2 * margin;
+      let yPosition = margin;
+
+      // Helper function to add new page if needed
+      const checkPageBreak = (requiredHeight) => {
+        if (yPosition + requiredHeight > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+      };
+
+      // Helper function to convert markdown to plain text with basic formatting
+      const convertMarkdownToText = (text) => {
+        return text
+          .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold markers
+          .replace(/\*(.*?)\*/g, "$1") // Remove italic markers
+          .replace(/#{1,6}\s*(.*)/g, "$1") // Remove header markers
+          .replace(/`(.*?)`/g, "$1") // Remove code markers
+          .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Remove link markers, keep text
+          .replace(/^\s*[-*+]\s+/gm, "• ") // Convert bullet points
+          .replace(/^\s*\d+\.\s+/gm, "• ") // Convert numbered lists
+          .trim();
+      };
+
+      // Add title
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("AI Research Paper Analysis Results", margin, yPosition);
+      yPosition += 15;
+
+      // Add a line under title
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 15;
+
+      // Add file list
+      if (uploadedFiles.length > 0) {
+        checkPageBreak(30);
+
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Analyzed Papers:", margin, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "normal");
+
+        uploadedFiles.forEach((file, index) => {
+          checkPageBreak(8);
+          const paperText = `Paper ${index + 1}: ${file.filename}`;
+
+          // Split long filenames if needed
+          const lines = pdf.splitTextToSize(paperText, maxWidth);
+          lines.forEach((line) => {
+            pdf.text(line, margin, yPosition);
+            yPosition += 6;
+          });
+        });
+
+        yPosition += 10;
+      }
+
+      // Add responses
+      responses.forEach((response) => {
+        checkPageBreak(40);
+
+        // Response title
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        const titleLines = pdf.splitTextToSize(response.title, maxWidth);
+        titleLines.forEach((line) => {
+          checkPageBreak(8);
+          pdf.text(line, margin, yPosition);
+          yPosition += 8;
+        });
+
+        yPosition += 5;
+
+        // Response content
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+
+        const cleanContent = convertMarkdownToText(response.content);
+        const contentLines = pdf.splitTextToSize(cleanContent, maxWidth);
+
+        contentLines.forEach((line) => {
+          checkPageBreak(6);
+
+          // Check if line starts with bullet point for better formatting
+          if (line.trim().startsWith("•")) {
+            pdf.text(line, margin + 5, yPosition);
+          } else {
+            pdf.text(line, margin, yPosition);
+          }
+          yPosition += 5;
+        });
+
+        yPosition += 15; // Space between responses
+      });
+
+      // Add footer with timestamp
+      const timestamp = new Date().toLocaleString();
+      const totalPages = pdf.internal.getNumberOfPages();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Generated on ${timestamp}`, margin, pageHeight - 10);
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth - margin - 20,
+          pageHeight - 10
+        );
+      }
+
+      // Download PDF
+      const downloadTimestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/:/g, "-");
+      pdf.save(`research-analysis-${downloadTimestamp}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -165,9 +309,14 @@ function App() {
           <div className="chat-header">
             <h2>💬 Analysis Results</h2>
             {responses.length > 0 && (
-              <button onClick={clearResponses} className="clear-button">
-                Clear All
-              </button>
+              <div className="header-buttons">
+                <button onClick={exportToPDF} className="save-pdf-button">
+                  📄 Save to PDF
+                </button>
+                <button onClick={clearResponses} className="clear-button">
+                  Clear All
+                </button>
+              </div>
             )}
           </div>
 
