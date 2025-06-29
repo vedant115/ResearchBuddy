@@ -3,6 +3,7 @@ services:
   - type: web
     name: research-buddy-api
     env: python
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && gunicorn app:app
     envVars:
@@ -16,6 +17,7 @@ services:
   - type: web
     name: research-buddy-frontend
     env: static
+    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
