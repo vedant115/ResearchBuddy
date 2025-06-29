@@ -177,6 +177,92 @@ def analyze_papers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/analyze-text', methods=['POST'])
+def analyze_text():
+    """
+    Analyze extracted text directly without file upload
+    Accepts pre-extracted text from client-side PDF processing
+    """
+    data = request.get_json()
+
+    # Validate required fields
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    pdf_texts = data.get('pdf_texts', [])
+    analysis_type = data.get('analysis_type')
+    custom_question = data.get('custom_question', '')
+    file_metadata = data.get('file_metadata', [])
+
+    # Validation
+    if not pdf_texts or not isinstance(pdf_texts, list):
+        return jsonify({'error': 'pdf_texts must be a non-empty array'}), 400
+
+    if len(pdf_texts) > 5:
+        return jsonify({'error': 'Maximum 5 documents allowed'}), 400
+
+    if not analysis_type:
+        return jsonify({'error': 'analysis_type is required'}), 400
+
+    # Filter out empty texts
+    valid_texts = [text.strip() for text in pdf_texts if text and text.strip()]
+
+    if not valid_texts:
+        return jsonify({'error': 'No valid text content found in provided documents'}), 400
+
+    try:
+        # Define prompts for different analysis types (same as original endpoint)
+        prompts = {
+            'research_gap': """
+            You are a highly skilled research assistant. Based on the following research papers,
+            analyze the collective body of work and identify the primary research gap.
+            - What are the key unanswered questions?
+            - Where does the current research fall short?
+            - What is a logical next step or a new direction for future research in this area?
+            Provide a concise summary of the gap.
+            """,
+            'methodology': """
+            As an expert academic reviewer, compare and contrast the methodologies used in the provided research papers.
+            - What are the main approaches taken in each paper?
+            - What are the strengths and weaknesses of each methodology?
+            - Are the methodologies appropriate for the research questions they aim to answer?
+            Present your analysis in a structured format, perhaps using a table or bullet points for clarity.
+            """,
+            'key_findings': """
+            You are an efficient academic summarizer. Provide a consolidated summary of the key findings from all the research papers provided.
+            - What are the major conclusions of each paper?
+            - Are there any conflicting or corroborating findings among the papers?
+            - What is the overall contribution of this collection of papers to the field?
+            Please synthesize the information into a coherent summary.
+            """,
+            'future_work': """
+            As a research strategist, your task is to extract all explicit and implicit suggestions for future work mentioned in these papers.
+            - Collate the "future work" or "conclusion" sections.
+            - Infer potential next steps based on the limitations discussed.
+            - Group similar suggestions and present a clear, actionable list of potential research projects.
+            """,
+            'custom': """
+            You are a helpful research assistant. Answer the user's question based on the content of the provided research papers.
+            """
+        }
+
+        if analysis_type not in prompts:
+            return jsonify({'error': 'Invalid analysis type'}), 400
+
+        prompt = prompts[analysis_type]
+        response = get_gemini_response(prompt, valid_texts, custom_question)
+
+        return jsonify({
+            'response': response,
+            'analysis_type': analysis_type,
+            'custom_question': custom_question if analysis_type == 'custom' else None,
+            'documents_processed': len(valid_texts),
+            'file_metadata': file_metadata
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/files/<session_id>', methods=['GET'])
 def get_uploaded_files(session_id):
     if session_id in uploaded_files_store:
@@ -200,7 +286,15 @@ def delete_session_files(session_id):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    return jsonify({'status': 'healthy', 'message': 'Research Buddy API is running'})
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Research Buddy API is running',
+        'features': {
+            'file_upload': True,
+            'text_analysis': True,
+            'client_side_processing': True
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
