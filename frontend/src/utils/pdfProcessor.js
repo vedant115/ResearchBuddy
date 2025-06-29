@@ -9,24 +9,24 @@ import * as pdfjsLib from "pdfjs-dist";
 function configurePDFWorker() {
   // Try different worker configurations in order of preference
   const workerOptions = [
-    // Option 1: Use worker from public directory (most reliable)
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-    },
-    // Option 2: Use local worker from node_modules (correct .mjs extension)
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/build/pdf.worker.min.mjs",
-        import.meta.url
-      ).toString();
-    },
-    // Option 3: Use CDN with HTTPS
+    // Option 1: Use CDN with HTTPS (most reliable for deployment)
     () => {
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
     },
-    // Option 4: Use jsdelivr CDN as backup
+    // Option 2: Use jsdelivr CDN as backup
     () => {
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+    },
+    // Option 3: Use worker from public directory
+    () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+    },
+    // Option 4: Use local worker from node_modules
+    () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.js",
+        import.meta.url
+      ).toString();
     },
     // Option 5: Disable worker (slower but more compatible)
     () => {
