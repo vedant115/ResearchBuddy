@@ -17,7 +17,6 @@ services:
   - type: web
     name: research-buddy-frontend
     env: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
