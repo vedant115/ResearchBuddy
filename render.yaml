@@ -9,7 +9,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: GOOGLE_API_KEY
-        fromEnv: GOOGLE_API_KEY
+        sync: false
     healthCheckPath: /api/health
 
   # Frontend static site
