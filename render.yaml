@@ -1,0 +1,31 @@
+services:
+  # Backend API service
+  - type: web
+    name: research-buddy-api
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GOOGLE_API_KEY
+        fromEnv: GOOGLE_API_KEY
+    healthCheckPath: /api/health
+
+  # Frontend static site
+  - type: web
+    name: research-buddy-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=86400
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

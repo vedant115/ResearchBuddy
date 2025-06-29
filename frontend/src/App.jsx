@@ -21,7 +21,10 @@ import {
   isPDFJSReady,
 } from "./utils/pdfProcessor.js";
 
-const API_BASE_URL = "http://localhost:5000/api";
+// Update API_BASE_URL to handle production environment
+const API_BASE_URL = import.meta.env.PROD
+  ? "https://research-buddy-api.onrender.com/api"
+  : "http://localhost:5000/api";
 
 function App() {
   // Updated state management for client-side processing

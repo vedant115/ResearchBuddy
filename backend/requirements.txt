@@ -4,3 +4,4 @@ python-dotenv
 PyMuPDF
 google-generativeai
 werkzeug
+gunicorn

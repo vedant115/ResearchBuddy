@@ -11,7 +11,14 @@ import uuid
 import shutil
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from Render domains
+if os.environ.get('RENDER'):
+    # Production CORS settings
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://research-buddy-frontend.onrender.com')
+    CORS(app, resources={r"/api/*": {"origins": [frontend_url, "https://*.onrender.com"]}})
+else:
+    # Development CORS settings
+    CORS(app)
 
 # Configure upload settings
 UPLOAD_FOLDER = 'uploads'
@@ -298,3 +305,4 @@ def health_check():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
