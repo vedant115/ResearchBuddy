@@ -17,7 +17,13 @@ services:
   - type: web
     name: research-buddy-frontend
     env: static
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: >
+      cd frontend && 
+      npm install && 
+      mkdir -p public && 
+      cp node_modules/pdfjs-dist/build/pdf.worker.min.js public/ && 
+      npm run build && 
+      cp node_modules/pdfjs-dist/build/pdf.worker.min.js dist/
     staticPublishPath: frontend/dist
     envVars:
       - key: NODE_VERSION
@@ -26,6 +32,12 @@ services:
       - path: /*
         name: Cache-Control
         value: public, max-age=86400
+      - path: /pdf.worker.min.js
+        name: Content-Type
+        value: application/javascript
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; worker-src 'self' blob:; connect-src 'self' https://research-buddy-api.onrender.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self';"
     routes:
       - type: rewrite
         source: /*

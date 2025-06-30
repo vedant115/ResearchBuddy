@@ -4,49 +4,13 @@
  */
 
 import * as pdfjsLib from "pdfjs-dist";
-
+console.log();
 // Configure PDF.js worker with multiple fallback options
 function configurePDFWorker() {
-  // Try different worker configurations in order of preference
-  const workerOptions = [
-    // Option 1: Use CDN with HTTPS (most reliable for deployment)
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-    },
-    // Option 2: Use jsdelivr CDN as backup
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
-    },
-    // Option 3: Use worker from public directory
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-    },
-    // Option 4: Use local worker from node_modules
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/build/pdf.worker.min.js",
-        import.meta.url
-      ).toString();
-    },
-    // Option 5: Disable worker (slower but more compatible)
-    () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = null;
-      console.warn("PDF.js worker disabled - processing will be slower");
-    },
-  ];
-
-  for (let i = 0; i < workerOptions.length; i++) {
-    try {
-      workerOptions[i]();
-      console.log(`PDF.js worker configured with option ${i + 1}`);
-      break;
-    } catch (error) {
-      console.warn(`PDF.js worker option ${i + 1} failed:`, error);
-      if (i === workerOptions.length - 1) {
-        console.error("All PDF.js worker options failed");
-      }
-    }
-  }
+  console.log("Configuring PDF.js worker...");
+  // Use local worker file as primary option
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+  console.log("PDF.js worker configured with local file");
 }
 
 // Initialize worker configuration
