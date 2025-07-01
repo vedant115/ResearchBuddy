@@ -547,7 +547,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>🔬 AI Research Paper Analyzer</h1>
+        <h1>🔬 Research Buddy</h1>
         <p>
           Analyze multiple research papers to uncover insights with Gemini AI
         </p>
